@@ -132,8 +132,8 @@ def get_code(location):
 def login(user, password):
     url1 = "https://api-user.huami.com/registrations/" + user + "/tokens"
     headers = {
-        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2"
+        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",        
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1"
     }
     data1 = {
         "client_id": "HuaMi",
@@ -142,6 +142,11 @@ def login(user, password):
         "token": "access"
     }
     r1 = requests.post(url1, data=data1, headers=headers, allow_redirects=False)
+
+    if r1.status_code != 302 or "Location" not in r1.headers:
+            print(f"登录失败! 状态码: {r1.status_code}, 响应: {r1.text[:200]}...")  # 截取部分响应
+            return 0, 0
+        
     location = r1.headers["Location"]
     try:
         code = get_code(location)
