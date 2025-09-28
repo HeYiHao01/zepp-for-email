@@ -141,12 +141,28 @@ def login(user, password):
         "redirect_uri": "https://s3-us-west-2.amazonaws.com/hm-registration/successsignin.html",
         "token": "access"
     }
-    r1 = requests.post(url1, data=data1, headers=headers, allow_redirects=False)
+    
+    # r1 = requests.post(url1, data=data1, headers=headers, allow_redirects=False)
+    # if r1.status_code != 302 or "Location" not in r1.headers:
+    #        print(f"登录失败! 状态码: {r1.status_code}, 响应: {r1.text[:200]}...")  # 截取部分响应
+    #        return 0, 0
 
-    if r1.status_code != 302 or "Location" not in r1.headers:
-            print(f"登录失败! 状态码: {r1.status_code}, 响应: {r1.text[:200]}...")  # 截取部分响应
-            return 0, 0
+    max_retries = 3
+    retry_delay = 30  # 秒    
+    for attempt in range(max_retries):
+        r1 = requests.post(url1, data=data1, headers=headers, allow_redirects=False)
         
+        # 处理429错误
+        if r1.status_code == 429:
+            wait_time = retry_delay * (attempt + 1)
+            print(f"触发限流! 将在{wait_time}秒后重试 (尝试 {attempt+1}/{max_retries})")
+            time.sleep(wait_time)
+            continue  # 继续重试循环
+        if r1.status_code != 302 or "Location" not in r1.headers:
+            print(f"登录失败! 状态码: {r1.status_code}, 响应: {r1.text[:200]}...")  # 截取部分响应
+            continue
+        else:
+            break
     location = r1.headers["Location"]
     try:
         code = get_code(location)
